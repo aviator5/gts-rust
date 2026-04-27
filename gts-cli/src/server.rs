@@ -131,8 +131,8 @@ struct MatchIdQuery {
 
 #[derive(Deserialize)]
 struct CompatibilityQuery {
-    old_schema_id: String,
-    new_schema_id: String,
+    old_type_id: String,
+    new_type_id: String,
 }
 
 #[derive(Deserialize)]
@@ -173,7 +173,7 @@ struct SchemaRegister {
 #[derive(Deserialize, serde::Serialize)]
 struct CastRequest {
     instance_id: String,
-    to_schema_id: String,
+    to_type_id: String,
 }
 
 #[derive(Deserialize, serde::Serialize)]
@@ -183,7 +183,7 @@ struct ValidateInstanceRequest {
 
 #[derive(Deserialize, serde::Serialize)]
 struct ValidateSchemaRequest {
-    schema_id: String,
+    type_id: String,
 }
 
 #[derive(Deserialize, serde::Serialize)]
@@ -347,7 +347,7 @@ async fn validate_schema(
         Ok(guard) => guard,
         Err(response) => return response.into_response(),
     };
-    let result = ops.validate_schema(&body.schema_id);
+    let result = ops.validate_schema(&body.type_id);
     Json(result).into_response()
 }
 
@@ -383,7 +383,7 @@ async fn compatibility(
         Ok(guard) => guard,
         Err(response) => return response.into_response(),
     };
-    let result = ops.compatibility(&params.old_schema_id, &params.new_schema_id);
+    let result = ops.compatibility(&params.old_type_id, &params.new_type_id);
     Json(result).into_response()
 }
 
@@ -392,7 +392,7 @@ async fn cast(State(state): State<AppState>, Json(body): Json<CastRequest>) -> i
         Ok(guard) => guard,
         Err(response) => return response.into_response(),
     };
-    let result = ops.cast(&body.instance_id, &body.to_schema_id);
+    let result = ops.cast(&body.instance_id, &body.to_type_id);
     Json(result).into_response()
 }
 

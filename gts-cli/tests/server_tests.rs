@@ -416,7 +416,7 @@ async fn test_compatibility_endpoint() {
     let response = app
         .oneshot(
             Request::builder()
-                .uri("/compatibility?old_schema_id=gts:gts.test.foo.v1~&new_schema_id=gts:gts.test.foo.v2~")
+                .uri("/compatibility?old_type_id=gts:gts.test.foo.v1~&new_type_id=gts:gts.test.foo.v2~")
                 .body(Body::empty())
                 .unwrap(),
         )
@@ -443,7 +443,7 @@ async fn test_cast_endpoint() {
 
     let request_body = serde_json::json!({
         "instance_id": "gts:gts.test.foo.v1:test123",
-        "to_schema_id": "gts:gts.test.foo.v2~"
+        "to_type_id": "gts:gts.test.foo.v2~"
     });
 
     let response = app

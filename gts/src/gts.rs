@@ -605,19 +605,19 @@ impl GtsInstanceId {
         })
     }
 
-    /// Creates a new GTS instance ID by combining a schema ID with a segment.
+    /// Creates a new GTS Instance Identifier by combining a GTS Type Identifier with a segment.
     ///
     /// # Arguments
     ///
-    /// * `schema_id` - The GTS schema ID (e.g., `gts.x.core.events.topic.v1~`)
+    /// * `type_id` - The GTS Type Identifier (e.g., `gts.x.core.events.topic.v1~`)
     /// * `segment` - The instance segment to append (e.g., `vendor.app.orders.v1.0`)
     ///
     /// # Returns
     ///
     /// A new `GtsInstanceId` containing the concatenated ID.
     #[must_use]
-    pub fn new(schema_id: &str, segment: &str) -> Self {
-        Self(GtsEntityId::new(&format!("{schema_id}{segment}")))
+    pub fn new(type_id: &str, segment: &str) -> Self {
+        Self(GtsEntityId::new(&format!("{type_id}{segment}")))
     }
 
     /// Returns the underlying string representation of the instance ID.
@@ -765,18 +765,18 @@ impl GtsSchemaId {
         })
     }
 
-    /// Creates a new GTS schema ID from string.
+    /// Creates a new GTS Type Identifier wrapper from string.
     ///
     /// # Arguments
     ///
-    /// * `schema_id` - The GTS schema ID (e.g., `gts.x.core.events.topic.v1~`)
+    /// * `type_id` - The GTS Type Identifier (e.g., `gts.x.core.events.topic.v1~`)
     ///
     /// # Returns
     ///
     /// A new `GtsSchemaId` containing the concatenated ID.
     #[must_use]
-    pub fn new(schema_id: &str) -> Self {
-        Self(GtsEntityId::new(schema_id))
+    pub fn new(type_id: &str) -> Self {
+        Self(GtsEntityId::new(type_id))
     }
 
     /// Returns the underlying string representation of the schema ID.

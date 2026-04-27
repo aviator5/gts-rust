@@ -86,7 +86,7 @@ fn test_gts_store_register_schema() {
 
     let entity = store.get("gts.vendor.package.namespace.type.v1.0~");
     assert!(entity.is_some());
-    assert!(entity.expect("test").is_schema);
+    assert!(entity.expect("test").is_type);
 }
 
 #[test]
@@ -193,7 +193,7 @@ fn test_gts_store_validate_instance_missing_schema() {
 
     store.register(entity).expect("test");
 
-    // Try to validate - should fail because no schema_id
+    // Try to validate - should fail because no type_id
     let result = store.validate_instance("gts.vendor.package.namespace.type.v1.0");
     assert!(result.is_err());
 }
@@ -230,10 +230,10 @@ fn test_gts_store_query_wildcard() {
             "type": "object"
         });
 
-        let schema_id = format!("gts.vendor.package.namespace.type.v{i}.0~");
+        let type_id = format!("gts.vendor.package.namespace.type.v{i}.0~");
 
         store
-            .register_schema(&schema_id, &schema_content)
+            .register_schema(&type_id, &schema_content)
             .expect("test");
     }
 
@@ -275,8 +275,8 @@ fn test_store_error_display() {
     let error = StoreError::ObjectNotFound("test_id".to_owned());
     assert!(error.to_string().contains("test_id"));
 
-    let error = StoreError::SchemaNotFound("schema_id".to_owned());
-    assert!(error.to_string().contains("schema_id"));
+    let error = StoreError::SchemaNotFound("type_id".to_owned());
+    assert!(error.to_string().contains("type_id"));
 
     let error = StoreError::EntityNotFound("entity_id".to_owned());
     assert!(error.to_string().contains("entity_id"));
@@ -318,7 +318,7 @@ fn test_gts_store_cast() {
         .register_schema("gts.vendor.package.namespace.type.v1.1~", &schema_v2)
         .expect("test");
 
-    // Register an entity with proper schema_id
+    // Register an entity with proper type_id
     let cfg = GtsConfig::default();
     let content = json!({
         "id": "gts.vendor.package.namespace.type.v1.0",
@@ -1970,7 +1970,7 @@ fn test_gts_store_cast_from_schema_entity() {
 }
 
 #[test]
-fn test_gts_store_build_schema_graph_with_schema_id() {
+fn test_gts_store_build_schema_graph_with_type_id() {
     let mut store = GtsStore::new(None);
 
     // Register schema
@@ -1987,7 +1987,7 @@ fn test_gts_store_build_schema_graph_with_schema_id() {
         .register_schema("gts.vendor.package.namespace.type.v1.0~", &schema)
         .expect("test");
 
-    // Register instance with schema_id
+    // Register instance with type_id
     let cfg = GtsConfig::default();
     let content = json!({
         "id": "gts.vendor.package.namespace.instance.v1.0",
@@ -2011,9 +2011,9 @@ fn test_gts_store_build_schema_graph_with_schema_id() {
     let graph = store.build_schema_graph("gts.vendor.package.namespace.instance.v1.0");
     assert!(graph.is_object());
 
-    // Check that schema_id is included in the graph
+    // Check that type_id is included in the graph
     let graph_obj = graph.as_object().expect("test");
-    assert!(graph_obj.contains_key("schema_id") || graph_obj.contains_key("errors"));
+    assert!(graph_obj.contains_key("type_id") || graph_obj.contains_key("errors"));
 }
 
 #[test]
@@ -2637,7 +2637,7 @@ fn test_validate_schema_refs_gts_prefix_but_empty_id() {
 }
 
 #[test]
-fn test_validate_schema_x_gts_refs_non_schema_id() {
+fn test_validate_schema_x_gts_refs_non_type_id() {
     // Test error when gts_id doesn't end with '~'
     let mut store = GtsStore::new(None);
     let result = store.validate_schema_x_gts_refs("gts.vendor.package.namespace.type.v1.0");
@@ -2669,11 +2669,11 @@ fn test_validate_schema_x_gts_refs_schema_not_found() {
 
 #[test]
 fn test_validate_schema_x_gts_refs_entity_not_schema() {
-    // Test error when entity exists but is_schema is false
+    // Test error when entity exists but is_type is false
     let mut store = GtsStore::new(None);
     let cfg = GtsConfig::default();
 
-    // Create an instance with an ID that ends with '~' but is_schema=false
+    // Create an instance with an ID that ends with '~' but is_type=false
     let content = json!({
         "id": "gts.vendor.package.namespace.type.v1.0~",
         "name": "test"
@@ -2686,7 +2686,7 @@ fn test_validate_schema_x_gts_refs_entity_not_schema() {
         &content,
         Some(&cfg),
         Some(gts_id),
-        false, // is_schema = false
+        false, // is_type = false
         String::new(),
         None,
         None,
@@ -2737,7 +2737,7 @@ fn test_validate_schema_x_gts_refs_validation_error() {
 }
 
 #[test]
-fn test_validate_schema_non_schema_id() {
+fn test_validate_schema_non_type_id() {
     // Test lines 443-445: ID doesn't end with '~'
     let mut store = GtsStore::new(None);
     let result = store.validate_schema("gts.vendor.package.namespace.type.v1.0");
@@ -2754,7 +2754,7 @@ fn test_validate_schema_non_schema_id() {
 
 #[test]
 fn test_validate_schema_entity_not_schema() {
-    // Test lines 453-455: Entity exists but is_schema is false
+    // Test lines 453-455: Entity exists but is_type is false
     let mut store = GtsStore::new(None);
     let cfg = GtsConfig::default();
 
@@ -2770,7 +2770,7 @@ fn test_validate_schema_entity_not_schema() {
         &content,
         Some(&cfg),
         Some(gts_id),
-        false, // is_schema = false
+        false, // is_type = false
         String::new(),
         None,
         None,
@@ -2792,7 +2792,7 @@ fn test_validate_schema_entity_not_schema() {
 fn test_validate_schema_content_not_object() {
     // Test error case when schema content is not an object
     // When content is non-object (array), GtsEntity.has_schema_field() returns false
-    // so is_schema becomes false, triggering the error on line 453-455 instead of 460-462
+    // so is_type becomes false, triggering the error on line 453-455 instead of 460-462
     let mut store = GtsStore::new(None);
 
     // Create schema with non-object content (an array)
@@ -2806,7 +2806,7 @@ fn test_validate_schema_content_not_object() {
     assert!(result.is_err());
     match result {
         Err(StoreError::SchemaNotFound(msg)) => {
-            // Since the content has no $schema field, is_schema is false
+            // Since the content has no $schema field, is_type is false
             assert!(msg.contains("is not a schema"));
         }
         _ => panic!("Expected SchemaNotFound error"),
@@ -2973,11 +2973,11 @@ fn test_validate_instance_x_gts_ref_validation_failed() {
 
 #[test]
 fn test_cast_missing_schema_for_instance() {
-    // Test lines 599-605: Instance exists but has no schema_id
+    // Test lines 599-605: Instance exists but has no type_id
     let mut store = GtsStore::new(None);
     let cfg = GtsConfig::default();
 
-    // Create an instance without a schema_id
+    // Create an instance without a type_id
     let content = json!({
         "id": "gts.vendor.package.namespace.type.v1.0",
         "name": "test"
@@ -4014,11 +4014,11 @@ fn test_store_register_schema_validates_type_id() {
     let mut store = GtsStore::new(None);
 
     // Valid schema ID ending with ~
-    let schema_id = "gts.test.package.namespace.minimal.v1~";
+    let type_id = "gts.test.package.namespace.minimal.v1~";
     let result = store.register_schema(
-        schema_id,
+        type_id,
         &json!({
-            "$id": format!("gts://{schema_id}"),
+            "$id": format!("gts://{type_id}"),
             "type": "object"
         }),
     );
@@ -4072,17 +4072,17 @@ fn test_store_error_variants() {
 #[test]
 fn test_store_get_schema_content_returns_copy() {
     let mut store = GtsStore::new(None);
-    let schema_id = "gts.test.package.namespace.copy.v1~";
+    let type_id = "gts.test.package.namespace.copy.v1~";
     let schema = json!({
-        "$id": format!("gts://{schema_id}"),
+        "$id": format!("gts://{type_id}"),
         "type": "object",
         "properties": {"field": {"type": "string"}}
     });
 
-    store.register_schema(schema_id, &schema).unwrap();
+    store.register_schema(type_id, &schema).unwrap();
 
-    let content1 = store.get_schema_content(schema_id).unwrap();
-    let content2 = store.get_schema_content(schema_id).unwrap();
+    let content1 = store.get_schema_content(type_id).unwrap();
+    let content2 = store.get_schema_content(type_id).unwrap();
 
     // Both should be equal
     assert_eq!(content1, content2);

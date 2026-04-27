@@ -597,14 +597,14 @@ fn test_schema_parsed_as_gts_entity() {
         &schema_json,              // content
         Some(&cfg),                // config
         None,                      // gts_id (will be auto-detected)
-        true,                      // is_schema
+        true,                      // is_type
         "EventTopicV1".to_owned(), // label
         None,                      // validation
-        None,                      // schema_id
+        None,                      // type_id
     );
 
     // Verify entity is detected as a schema
-    assert!(entity.is_schema, "Entity should be detected as a schema");
+    assert!(entity.is_type, "Entity should be detected as a GTS Type");
 
     // Verify GTS ID was parsed
     let gts_id = entity.gts_id.as_ref().expect("Entity should have a GTS ID");
@@ -638,10 +638,10 @@ fn test_instance_parsed_as_gts_entity() {
         &instance_json,            // content
         Some(&cfg),                // config
         None,                      // gts_id (will be auto-detected from "id" field)
-        false,                     // is_schema
+        false,                     // is_type
         "orders-topic".to_owned(), // label
         None,                      // validation
-        None,                      // schema_id
+        None,                      // type_id
     );
 
     // Verify GTS ID was parsed from the instance

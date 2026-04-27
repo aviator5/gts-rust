@@ -280,8 +280,8 @@ Verify that schemas with different MINOR versions are compatible.
 ```bash
 # Check compatibility between schema versions
 gts --path ./.gts-spec/examples compatibility \
-    --old-schema-id "gts.x.core.events.type.v1~x.commerce.orders.order_placed.v1.0~" \
-    --new-schema-id "gts.x.core.events.type.v1~x.commerce.orders.order_placed.v1.1~"
+    --old-type-id "gts.x.core.events.type.v1~x.commerce.orders.order_placed.v1.0~" \
+    --new-type-id "gts.x.core.events.type.v1~x.commerce.orders.order_placed.v1.1~"
 
 # The system checks:
 # - OP#8.1: Backward compatibility (old instances work with new schema)
@@ -317,7 +317,7 @@ Transform instances between compatible MINOR versions.
 # Cast instance from v1.0 to v1.1 schema (instance is identified by UUID)
 gts --path ./.gts-spec/examples cast \
     --from-id "7a1d2f34-5678-49ab-9012-abcdef123456" \
-    --to-schema-id "gts.x.core.events.type.v1~x.commerce.orders.order_placed.v1.1~"
+    --to-type-id "gts.x.core.events.type.v1~x.commerce.orders.order_placed.v1.1~"
 
 # The system:
 # 1. Loads source instance and both schemas
@@ -417,7 +417,7 @@ Validate that a derived (chained) schema is compatible with its base schema. The
 ```bash
 # Validate a chained schema against its base
 gts --path ./.gts-spec/examples validate-schema \
-    --schema-id "gts.x.core.events.event.v1~vendor.app._.custom.v2~"
+    --type-id "gts.x.core.events.event.v1~vendor.app._.custom.v2~"
 
 # The system:
 # 1. Walks the schema chain (each segment pair)
@@ -519,7 +519,7 @@ let config = GtsConfig {
         "gtsId".to_string(),
         "id".to_string(),
     ],
-    schema_id_fields: vec![
+    type_id_fields: vec![
         "$schema".to_string(),
         "type".to_string(),
     ],
@@ -867,7 +867,7 @@ curl -X POST http://localhost:8000/entities \
 # Validate schema (OP#12 - schema-vs-schema chain validation)
 curl -X POST http://localhost:8000/validate-schema \
   -H "Content-Type: application/json" \
-  -d '{"schema_id": "gts.x.core.events.event.v1~vendor.app._.custom.v2~"}'
+  -d '{"type_id": "gts.x.core.events.event.v1~vendor.app._.custom.v2~"}'
 ```
 
 ## Configuration
@@ -887,7 +887,7 @@ Create a `gts.config.json` file to customize entity ID field detection:
     "gts_iid",
     "id"
   ],
-  "schema_id_fields": [
+  "type_id_fields": [
     "$schema",
     "gtsTid",
     "gtsType",
