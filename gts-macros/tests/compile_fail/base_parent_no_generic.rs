@@ -6,9 +6,9 @@ use gts_macros::struct_to_gts_schema;
 
 // Parent struct with NO generic field (leaf/terminal type)
 #[struct_to_gts_schema(
-    dir_path = "schemas",
+    dir_path = "types",
     base = true,
-    schema_id = "gts.x.app.entities.leaf.v1~",
+    type_id = "gts.x.app.entities.leaf.v1~",
     description = "Leaf type with no generic field",
     properties = "id,name"
 )]
@@ -19,9 +19,9 @@ pub struct LeafTypeV1 {
 
 // This should fail: trying to extend a parent with no generic field
 #[struct_to_gts_schema(
-    dir_path = "schemas",
+    dir_path = "types",
     base = LeafTypeV1,
-    schema_id = "gts.x.app.entities.leaf.v1~x.app.entities.child.v1~",
+    type_id = "gts.x.app.entities.leaf.v1~x.app.entities.child.v1~",
     description = "Child trying to extend leaf type (invalid)",
     properties = "extra_field"
 )]

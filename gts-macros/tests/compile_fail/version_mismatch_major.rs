@@ -1,12 +1,12 @@
-//! Test: Struct version suffix doesn't match schema_id major version
+//! Test: Struct version suffix doesn't match type_id major version
 //! BaseEventV2 should not work with v1~ schema
 
 use gts_macros::struct_to_gts_schema;
 
 #[struct_to_gts_schema(
-    dir_path = "schemas",
+    dir_path = "types",
     base = true,
-    schema_id = "gts.x.core.events.type.v1~",
+    type_id = "gts.x.core.events.type.v1~",
     description = "Base event type",
     properties = "id"
 )]

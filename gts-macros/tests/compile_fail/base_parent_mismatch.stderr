@@ -1,10 +1,10 @@
-error: struct_to_gts_schema: Base structs must have either an ID field (one of: $id, id, gts_id, or gtsId) of type GtsInstanceId OR a GTS Type field (one of: type, gts_type, gtsType, or schema) of type GtsSchemaId
+error: struct_to_gts_schema: Base structs must have either an ID field (one of: $id, id, gts_id, or gtsId) of type GtsInstanceId OR a GTS Type field (one of: type, gts_type, gtsType, or schema) of type GtsTypeId
   --> tests/compile_fail/base_parent_mismatch.rs:15:12
    |
 15 | pub struct BaseEventV1<P> {
    |            ^^^^^^^^^^^
 
-error[E0412]: cannot find type `BaseEventV1` in this scope
+error[E0425]: cannot find type `BaseEventV1` in this scope
   --> tests/compile_fail/base_parent_mismatch.rs:25:12
    |
 25 |     base = BaseEventV1,

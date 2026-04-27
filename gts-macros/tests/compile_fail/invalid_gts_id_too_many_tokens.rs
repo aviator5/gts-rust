@@ -8,9 +8,9 @@ use gts_macros::struct_to_gts_schema;
 
 // First define the base struct that we extend
 #[struct_to_gts_schema(
-    dir_path = "schemas",
+    dir_path = "types",
     base = true,
-    schema_id = "gts.x.core.modkit.plugin.v1~",
+    type_id = "gts.x.core.modkit.plugin.v1~",
     description = "Base modkit plugin",
     properties = "id"
 )]
@@ -20,9 +20,9 @@ pub struct BaseModkitPluginV1 {
 
 // This should fail - the second segment has too many tokens
 #[struct_to_gts_schema(
-    dir_path = "schemas",
+    dir_path = "types",
     base = BaseModkitPluginV1,
-    schema_id = "gts.x.core.modkit.plugin.v1~x.core.license_enforcer.integration.plugin.v1~",
+    type_id = "gts.x.core.modkit.plugin.v1~x.core.license_enforcer.integration.plugin.v1~",
     description = "License Enforcer platform integration plugin specification",
     properties = ""
 )]

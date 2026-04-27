@@ -2,9 +2,9 @@ error: unexpected end of input, Missing required attribute: properties
   --> tests/compile_fail/missing_properties.rs:5:1
    |
  5 | / #[struct_to_gts_schema(
- 6 | |     dir_path = "schemas",
+ 6 | |     dir_path = "types",
  7 | |     base = true,
- 8 | |     schema_id = "gts.x.app.entities.user.v1~",
+ 8 | |     type_id = "gts.x.app.entities.user.v1~",
  9 | |     description = "User entity"
 10 | | )]
    | |__^

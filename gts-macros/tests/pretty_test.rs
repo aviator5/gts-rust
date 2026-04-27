@@ -3,8 +3,8 @@ mod tests {
     use gts_macros::struct_to_gts_schema;
 
     #[struct_to_gts_schema(
-        dir_path = "test_schemas",
-        schema_id = "gts.x.test.entities.pretty.v1~",
+        dir_path = "test_types",
+        type_id = "gts.x.test.entities.pretty.v1~",
         description = "Test schema for pretty formatting",
         properties = "id,name,value",
         base = true

@@ -15,9 +15,9 @@ use gts_macros::struct_to_gts_schema;
 /// Inspired by examples/examples/events/schemas/gts.x.core.events.topic.v1~.schema.json
 #[derive(Debug, Clone)]
 #[struct_to_gts_schema(
-    dir_path = "schemas",
+    dir_path = "types",
     base = true,
-    schema_id = "gts.x.core.events.topic.v1~",
+    type_id = "gts.x.core.events.topic.v1~",
     description = "Event Topic (Stream) definition",
     properties = "id,name,description,retention,ordering"
 )]
@@ -39,9 +39,9 @@ pub struct EventTopicV1 {
 /// Product entity for testing GTS schema generation
 #[derive(Debug, Clone)]
 #[struct_to_gts_schema(
-    dir_path = "schemas",
+    dir_path = "types",
     base = true,
-    schema_id = "gts.x.test.entities.product.v1~",
+    type_id = "gts.x.test.entities.product.v1~",
     description = "Product entity with pricing information",
     properties = "id,name,price,description,in_stock"
 )]
@@ -208,7 +208,7 @@ fn test_gts_instance_id_versioned_segment() {
 
 #[test]
 fn test_gts_instance_id_empty_segment() {
-    // Edge case: empty segment returns just the schema_id
+    // Edge case: empty segment returns just the type_id
     let id = EventTopicV1::gts_make_instance_id("");
     assert_eq!(id, "gts.x.core.events.topic.v1~");
 }
@@ -218,13 +218,13 @@ fn test_gts_instance_id_empty_segment() {
 // =============================================================================
 
 #[test]
-fn test_schema_id_constant() {
+fn test_type_id_constant() {
     assert_eq!(
-        EventTopicV1::gts_schema_id().clone().into_string(),
+        EventTopicV1::gts_type_id().clone().into_string(),
         "gts.x.core.events.topic.v1~"
     );
     assert_eq!(
-        ProductV1::gts_schema_id().clone().into_string(),
+        ProductV1::gts_type_id().clone().into_string(),
         "gts.x.test.entities.product.v1~"
     );
 }
@@ -233,11 +233,11 @@ fn test_schema_id_constant() {
 fn test_file_path_constant() {
     assert_eq!(
         EventTopicV1::GTS_SCHEMA_FILE_PATH,
-        "schemas/gts.x.core.events.topic.v1~.schema.json"
+        "types/gts.x.core.events.topic.v1~.schema.json"
     );
     assert_eq!(
         ProductV1::GTS_SCHEMA_FILE_PATH,
-        "schemas/gts.x.test.entities.product.v1~.schema.json"
+        "types/gts.x.test.entities.product.v1~.schema.json"
     );
 }
 
@@ -613,7 +613,7 @@ fn test_schema_parsed_as_gts_entity() {
     // Verify the ID matches what the macro generates
     assert_eq!(
         gts_id.id,
-        EventTopicV1::gts_schema_id().clone().into_string()
+        EventTopicV1::gts_type_id().clone().into_string()
     );
 }
 
@@ -655,10 +655,10 @@ fn test_instance_parsed_as_gts_entity() {
 #[test]
 fn test_gts_id_segments_match_schema() {
     // Get the schema ID from the macro
-    let schema_id_str = EventTopicV1::gts_schema_id().as_ref();
+    let type_id_str = EventTopicV1::gts_type_id().as_ref();
 
     // Parse it with GtsID
-    let gts_id = GtsID::new(schema_id_str).expect("Schema ID should be valid");
+    let gts_id = GtsID::new(type_id_str).expect("Schema ID should be valid");
 
     // Verify segments
     assert_eq!(
@@ -713,14 +713,14 @@ fn test_gts_id_segments_match_instance() {
 #[test]
 fn test_schema_and_instance_segments_relationship() {
     // The schema ID from macro
-    let schema_id = GtsID::new(EventTopicV1::gts_schema_id().as_ref()).unwrap();
+    let type_id = GtsID::new(EventTopicV1::gts_type_id().as_ref()).unwrap();
 
     // An instance ID from the macro
     let instance_id_str = EventTopicV1::gts_make_instance_id("x.core.idp.contacts.v1");
     let instance_id = GtsID::new(&instance_id_str).unwrap();
 
     // The first segment of the instance should match the schema's segment
-    let schema_segment = &schema_id.gts_id_segments[0];
+    let schema_segment = &type_id.gts_id_segments[0];
     let instance_type_segment = &instance_id.gts_id_segments[0];
 
     assert_eq!(schema_segment.vendor, instance_type_segment.vendor);
@@ -733,7 +733,7 @@ fn test_schema_and_instance_segments_relationship() {
     let type_id = instance_id.get_type_id();
     assert_eq!(
         type_id,
-        Some(EventTopicV1::gts_schema_id().clone().into_string())
+        Some(EventTopicV1::gts_type_id().clone().into_string())
     );
 }
 
@@ -759,7 +759,7 @@ fn test_entity_and_gts_id_vendor_package_namespace_match() {
     let entity_gts_id = entity.gts_id.as_ref().unwrap();
 
     // Parse the same ID directly using GtsID
-    let direct_gts_id = GtsID::new(EventTopicV1::gts_schema_id().as_ref()).unwrap();
+    let direct_gts_id = GtsID::new(EventTopicV1::gts_type_id().as_ref()).unwrap();
 
     // Verify they match
     assert_eq!(entity_gts_id.id, direct_gts_id.id);
@@ -960,7 +960,7 @@ fn test_schema_inline_inheritance_with_parent() {
     let base_schema = inheritance_tests::BaseEventV1::<()>::gts_schema_with_refs();
     store
         .register_schema(
-            inheritance_tests::BaseEventV1::<()>::gts_schema_id().as_ref(),
+            inheritance_tests::BaseEventV1::<()>::gts_type_id().as_ref(),
             &base_schema,
         )
         .unwrap();
@@ -1080,9 +1080,9 @@ fn test_runtime_schema_inline_resolution_single_segment() {
 
 #[derive(Debug, Clone)]
 #[struct_to_gts_schema(
-    dir_path = "schemas",
+    dir_path = "types",
     base = true,
-    schema_id = "gts.x.test.versioned.minor.v1.0~",
+    type_id = "gts.x.test.versioned.minor.v1.0~",
     description = "Test struct with minor version",
     properties = "id,value"
 )]
@@ -1093,9 +1093,9 @@ pub struct MinorVersionV1_0 {
 
 #[derive(Debug, Clone)]
 #[struct_to_gts_schema(
-    dir_path = "schemas",
+    dir_path = "types",
     base = true,
-    schema_id = "gts.x.test.versioned.complex.v2.5~",
+    type_id = "gts.x.test.versioned.complex.v2.5~",
     description = "Test struct with complex minor version",
     properties = "id,data"
 )]
@@ -1106,7 +1106,7 @@ pub struct ComplexMinorV2_5 {
 
 #[test]
 fn test_version_with_underscore_v1_0() {
-    // Test that struct with V1_0 suffix works with v1.0~ schema_id
+    // Test that struct with V1_0 suffix works with v1.0~ type_id
     let schema: serde_json::Value =
         serde_json::from_str(&MinorVersionV1_0::gts_schema_with_refs_as_string()).unwrap();
 
@@ -1122,7 +1122,7 @@ fn test_version_with_underscore_v1_0() {
 
 #[test]
 fn test_version_with_underscore_v2_5() {
-    // Test that struct with V2_5 suffix works with v2.5~ schema_id
+    // Test that struct with V2_5 suffix works with v2.5~ type_id
     let schema: serde_json::Value =
         serde_json::from_str(&ComplexMinorV2_5::gts_schema_with_refs_as_string()).unwrap();
 
@@ -1140,20 +1140,20 @@ fn test_version_with_underscore_v2_5() {
 fn test_version_extraction_underscore_format() {
     // Test that GtsSchema trait properly exposes the schema ID
     assert_eq!(
-        MinorVersionV1_0::SCHEMA_ID,
+        MinorVersionV1_0::TYPE_ID,
         "gts.x.test.versioned.minor.v1.0~"
     );
     assert_eq!(
-        ComplexMinorV2_5::SCHEMA_ID,
+        ComplexMinorV2_5::TYPE_ID,
         "gts.x.test.versioned.complex.v2.5~"
     );
 }
 
 #[derive(Debug, Clone)]
 #[struct_to_gts_schema(
-    dir_path = "schemas",
+    dir_path = "types",
     base = true,
-    schema_id = "gts.x.test.single.segment.v1~",
+    type_id = "gts.x.test.single.segment.v1~",
     description = "Base struct with single segment",
     properties = "id,name"
 )]
@@ -1164,7 +1164,7 @@ pub struct SingleSegmentBaseV1 {
 
 #[test]
 fn test_base_true_single_segment() {
-    // Test that base = true works with single segment schema_id
+    // Test that base = true works with single segment type_id
     let schema: serde_json::Value =
         serde_json::from_str(&SingleSegmentBaseV1::gts_schema_with_refs_as_string()).unwrap();
 
@@ -1185,14 +1185,14 @@ fn test_base_true_single_segment() {
 #[test]
 fn test_base_true_single_segment_no_parent() {
     // Verify that base structs have no parent schema ID
-    assert_eq!(SingleSegmentBaseV1::gts_base_schema_id(), None);
+    assert_eq!(SingleSegmentBaseV1::gts_base_type_id(), None);
 }
 
 #[test]
-fn test_base_true_single_segment_schema_id() {
+fn test_base_true_single_segment_type_id() {
     // Verify schema ID is properly set
-    let schema_id = SingleSegmentBaseV1::gts_schema_id();
-    assert_eq!(schema_id.as_ref(), "gts.x.test.single.segment.v1~");
+    let type_id = SingleSegmentBaseV1::gts_type_id();
+    assert_eq!(type_id.as_ref(), "gts.x.test.single.segment.v1~");
 }
 
 #[test]
@@ -1210,7 +1210,7 @@ fn test_base_true_single_segment_instance_id_generation() {
 #[test]
 fn test_gts_schema_trait_impl() {
     // Verify GtsSchema trait is implemented correctly
-    assert_eq!(EventTopicV1::SCHEMA_ID, "gts.x.core.events.topic.v1~");
+    assert_eq!(EventTopicV1::TYPE_ID, "gts.x.core.events.topic.v1~");
     assert_eq!(EventTopicV1::GENERIC_FIELD, None);
 
     let schema = EventTopicV1::gts_schema();
@@ -1218,10 +1218,10 @@ fn test_gts_schema_trait_impl() {
 }
 
 #[test]
-fn test_schema_ids_are_static() {
+fn test_type_ids_are_static() {
     // Verify schema IDs are static references (not reallocated)
-    let id1 = EventTopicV1::gts_schema_id();
-    let id2 = EventTopicV1::gts_schema_id();
+    let id1 = EventTopicV1::gts_type_id();
+    let id2 = EventTopicV1::gts_type_id();
 
     // These should be the same static reference
     assert_eq!(id1.as_ref(), id2.as_ref());

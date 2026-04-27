@@ -36,7 +36,7 @@ const MAX_RECURSION_DEPTH: usize = 64;
 
 /// Validates schema traits for a full inheritance chain.
 ///
-/// `chain_schemas` is an ordered list of `(schema_id, raw_schema_content)` pairs
+/// `chain_schemas` is an ordered list of `(type_id, raw_schema_content)` pairs
 /// from base (index 0) to leaf (last index).  The content should be **raw**
 /// (not allOf-flattened) so that `x-gts-*` extension keys are preserved.
 ///

@@ -1,9 +1,9 @@
-//! Test: Missing required attribute schema_id
+//! Test: Missing required attribute type_id
 
 use gts_macros::struct_to_gts_schema;
 
 #[struct_to_gts_schema(
-    dir_path = "schemas",
+    dir_path = "types",
     base = true,
     description = "User entity",
     properties = "id"
