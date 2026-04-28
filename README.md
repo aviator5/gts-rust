@@ -24,7 +24,7 @@ Featureset:
 - [x] **OP#9 - Version Casting**: Transform instances between compatible MINOR versions
 - [x] **OP#10 - Query Execution**: Filter identifier collections using the GTS query language
 - [x] **OP#11 - Attribute Access**: Retrieve property values and metadata using the attribute selector (`@`)
-- [x] **OP#12 - Schema Validation (schema-vs-schema)**: Validate a derived schema against its base schema in a chained ID
+- [x] **OP#12 - Type Derivation Validation**: Validate that a derived GTS Type Schema correctly extends its base chain
 
 See details in [gts/README.md](gts/README.md)
 
@@ -410,13 +410,13 @@ gts --path ./.gts-spec/examples attr --gts-with-path "gts.x.core.events.event.v1
 }
 ```
 
-#### OP#12 - Schema Validation
+#### OP#12 - Type Derivation Validation
 
-Validate that a derived (chained) schema is compatible with its base schema. The derived schema may only tighten constraints, never loosen them.
+Validate that a derived GTS Type Schema correctly extends its base chain. The derived Type Schema may only tighten constraints, never loosen them.
 
 ```bash
-# Validate a chained schema against its base
-gts --path ./.gts-spec/examples validate-schema \
+# Validate a chained Type Schema against its base
+gts --path ./.gts-spec/examples validate-type-schema \
     --type-id "gts.x.core.events.event.v1~vendor.app._.custom.v2~"
 
 # The system:
@@ -752,11 +752,11 @@ if !result.ok {
 }
 ```
 
-#### OP#12 - Schema Validation
+#### OP#12 - Type Derivation Validation
 
 ```rust
-// Validate a derived schema against its base (schema-vs-schema)
-let result = ops.validate_schema(
+// Validate a derived GTS Type Schema against its base chain (OP#12)
+let result = ops.validate_type_schema(
     "gts.x.core.events.event.v1~vendor.app._.custom.v2~"
 );
 assert!(result.ok);
@@ -828,11 +828,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let attr = ops.attr("gts.x.core.events.event.v1.0@name");
     println!("Name: {}", attr.value);
 
-    // OP#12: Validate derived schema against base
-    let validation = ops.validate_schema(
+    // OP#12: Validate derived GTS Type Schema against base chain
+    let validation = ops.validate_type_schema(
         "gts.x.core.events.event.v1~vendor.app._.custom.v2~"
     );
-    println!("Schema compatible: {}", validation.ok);
+    println!("Type Schema compatible: {}", validation.ok);
 
     Ok(())
 }
@@ -864,8 +864,8 @@ curl -X POST http://localhost:8000/entities \
   -H "Content-Type: application/json" \
   -d '{"gtsId": "gts.x.core.events.event.v1.0", "data": "..."}'
 
-# Validate schema (OP#12 - schema-vs-schema chain validation)
-curl -X POST http://localhost:8000/validate-schema \
+# Validate a derived GTS Type Schema (OP#12 - type derivation validation)
+curl -X POST http://localhost:8000/validate-type-schema \
   -H "Content-Type: application/json" \
   -d '{"type_id": "gts.x.core.events.event.v1~vendor.app._.custom.v2~"}'
 ```

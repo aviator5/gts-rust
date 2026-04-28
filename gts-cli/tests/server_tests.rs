@@ -179,13 +179,13 @@ async fn test_uuid_endpoint() {
 }
 
 #[tokio::test]
-async fn test_add_schema_endpoint() {
+async fn test_add_type_schema_endpoint() {
     let ops = create_test_ops();
     let app = create_test_router(ops, 0);
 
-    let schema = serde_json::json!({
+    let payload = serde_json::json!({
         "type_id": "test:schema:v1",
-        "schema": {
+        "type_schema": {
             "$id": "gts://test:schema:v1",
             "type": "object",
             "properties": {
@@ -198,9 +198,9 @@ async fn test_add_schema_endpoint() {
         .oneshot(
             Request::builder()
                 .method("POST")
-                .uri("/schemas")
+                .uri("/type-schemas")
                 .header("content-type", "application/json")
-                .body(Body::from(serde_json::to_vec(&schema).unwrap()))
+                .body(Body::from(serde_json::to_vec(&payload).unwrap()))
                 .unwrap(),
         )
         .await

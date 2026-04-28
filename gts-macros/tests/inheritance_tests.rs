@@ -238,7 +238,7 @@ mod tests {
     /// Helper to register 3-level event schemas (`BaseEventV1` -> `AuditPayloadV1` -> `PlaceOrderDataV1`)
     fn register_three_level_event_schemas(ops: &mut gts::GtsOps) {
         let base_schema = BaseEventV1::<()>::gts_schema_with_refs();
-        let base_result = ops.add_schema(
+        let base_result = ops.add_type_schema(
             BaseEventV1::<()>::gts_type_id().clone().into_string(),
             &base_schema,
         );
@@ -249,7 +249,7 @@ mod tests {
         );
 
         let audit_schema = AuditPayloadV1::<()>::gts_schema_with_refs();
-        let audit_result = ops.add_schema(
+        let audit_result = ops.add_type_schema(
             AuditPayloadV1::<()>::gts_type_id().clone().into_string(),
             &audit_schema,
         );
@@ -260,7 +260,7 @@ mod tests {
         );
 
         let order_schema = PlaceOrderDataV1::gts_schema_with_refs();
-        let order_result = ops.add_schema(
+        let order_result = ops.add_type_schema(
             PlaceOrderDataV1::gts_type_id().clone().into_string(),
             &order_schema,
         );
@@ -274,7 +274,7 @@ mod tests {
     /// Helper to register 2-level event schemas (`BaseEventV1` -> `SimplePayloadV1`)
     fn register_two_level_event_schemas(ops: &mut gts::GtsOps) {
         let base_schema = BaseEventV1::<()>::gts_schema_with_refs();
-        let base_result = ops.add_schema(
+        let base_result = ops.add_type_schema(
             BaseEventV1::<()>::gts_type_id().clone().into_string(),
             &base_schema,
         );
@@ -285,7 +285,7 @@ mod tests {
         );
 
         let simple_schema = SimplePayloadV1::gts_schema_with_refs();
-        let simple_result = ops.add_schema(
+        let simple_result = ops.add_type_schema(
             SimplePayloadV1::gts_type_id().clone().into_string(),
             &simple_schema,
         );
@@ -792,7 +792,7 @@ mod tests {
         let mut ops = gts::GtsOps::new(None, None, 0);
 
         let base_schema = TopicV1::<()>::gts_schema_with_refs();
-        let base_result = ops.add_schema(
+        let base_result = ops.add_type_schema(
             TopicV1::<()>::gts_type_id().clone().into_string(),
             &base_schema,
         );
@@ -804,7 +804,7 @@ mod tests {
 
         // Register the OrderTopicConfigV1 schema (empty struct) using GtsOps
         let empty_schema = OrderTopicConfigV1::gts_schema_with_refs();
-        let empty_result = ops.add_schema(
+        let empty_result = ops.add_type_schema(
             OrderTopicConfigV1::gts_type_id().clone().into_string(),
             &empty_schema,
         );
@@ -888,7 +888,7 @@ mod tests {
         let base_schema = TopicV1::<()>::gts_schema_with_refs();
         let empty_schema = OrderTopicConfigV1::gts_schema_with_refs();
 
-        let base_result = ops.add_schema(
+        let base_result = ops.add_type_schema(
             TopicV1::<()>::gts_type_id().clone().into_string(),
             &base_schema,
         );
@@ -898,7 +898,7 @@ mod tests {
             base_result.error
         );
 
-        let empty_result = ops.add_schema(
+        let empty_result = ops.add_type_schema(
             OrderTopicConfigV1::gts_type_id().clone().into_string(),
             &empty_schema,
         );
@@ -1072,7 +1072,7 @@ mod tests {
         // Register schemas for validation
         let mut ops = gts::GtsOps::new(None, None, 0);
         let schema = TopicV1WithIdV1::<()>::gts_schema_with_refs();
-        let result = ops.add_schema(
+        let result = ops.add_type_schema(
             TopicV1WithIdV1::<()>::gts_type_id().clone().into_string(),
             &schema,
         );
@@ -1082,7 +1082,7 @@ mod tests {
             result.error
         );
         let order_schema = OrderTopicConfigV1::gts_schema_with_refs();
-        let order_result = ops.add_schema(
+        let order_result = ops.add_type_schema(
             OrderTopicConfigV1::gts_type_id().clone().into_string(),
             &order_schema,
         );
@@ -1142,7 +1142,7 @@ mod tests {
         // Register schemas for validation
         let mut ops = gts::GtsOps::new(None, None, 0);
         let schema = TopicV1WithGtsIdV1::<()>::gts_schema_with_refs();
-        let result = ops.add_schema(
+        let result = ops.add_type_schema(
             TopicV1WithGtsIdV1::<()>::gts_type_id()
                 .clone()
                 .into_string(),
@@ -1154,7 +1154,7 @@ mod tests {
             result.error
         );
         let order_schema = OrderTopicConfigV1::gts_schema_with_refs();
-        let order_result = ops.add_schema(
+        let order_result = ops.add_type_schema(
             OrderTopicConfigV1::gts_type_id().clone().into_string(),
             &order_schema,
         );
@@ -1210,7 +1210,7 @@ mod tests {
         // Register schemas for validation
         let mut ops = gts::GtsOps::new(None, None, 0);
         let schema = TopicV1WithGtsIdCamelV1::<()>::gts_schema_with_refs();
-        let result = ops.add_schema(
+        let result = ops.add_type_schema(
             TopicV1WithGtsIdCamelV1::<()>::gts_type_id()
                 .clone()
                 .into_string(),
@@ -1222,7 +1222,7 @@ mod tests {
             result.error
         );
         let order_schema = OrderTopicConfigV1::gts_schema_with_refs();
-        let order_result = ops.add_schema(
+        let order_result = ops.add_type_schema(
             OrderTopicConfigV1::gts_type_id().clone().into_string(),
             &order_schema,
         );
@@ -1278,7 +1278,7 @@ mod tests {
         // Register schemas for validation
         let mut ops = gts::GtsOps::new(None, None, 0);
         let schema = TopicV1WithGtsTypeV1::<()>::gts_schema_with_refs();
-        let result = ops.add_schema(
+        let result = ops.add_type_schema(
             TopicV1WithGtsTypeV1::<()>::gts_type_id()
                 .clone()
                 .into_string(),
@@ -1330,7 +1330,7 @@ mod tests {
         // Register schemas for validation
         let mut ops = gts::GtsOps::new(None, None, 0);
         let schema = TopicV1WithGtsTypeCamelV1::<()>::gts_schema_with_refs();
-        let result = ops.add_schema(
+        let result = ops.add_type_schema(
             TopicV1WithGtsTypeCamelV1::<()>::gts_type_id()
                 .clone()
                 .into_string(),
@@ -1599,7 +1599,7 @@ mod tests {
         register_two_level_event_schemas(&mut ops);
         // Also register 3-level schemas (AuditPayloadV1 and PlaceOrderDataV1)
         let audit_schema = AuditPayloadV1::<()>::gts_schema_with_refs();
-        let audit_result = ops.add_schema(
+        let audit_result = ops.add_type_schema(
             AuditPayloadV1::<()>::gts_type_id().clone().into_string(),
             &audit_schema,
         );
@@ -1609,7 +1609,7 @@ mod tests {
             audit_result.error
         );
         let order_schema = PlaceOrderDataV1::gts_schema_with_refs();
-        let order_result = ops.add_schema(
+        let order_result = ops.add_type_schema(
             PlaceOrderDataV1::gts_type_id().clone().into_string(),
             &order_schema,
         );
@@ -1740,7 +1740,7 @@ mod tests {
 
         // Register base schema
         let base_schema = BaseEventV1::<()>::gts_schema_with_refs();
-        let base_result = ops.add_schema(
+        let base_result = ops.add_type_schema(
             BaseEventV1::<()>::gts_type_id().clone().into_string(),
             &base_schema,
         );
@@ -1752,7 +1752,7 @@ mod tests {
 
         // Register SimplePayloadV1 schema
         let simple_schema = SimplePayloadV1::gts_schema_with_refs();
-        let simple_result = ops.add_schema(
+        let simple_result = ops.add_type_schema(
             SimplePayloadV1::gts_type_id().clone().into_string(),
             &simple_schema,
         );
@@ -1788,7 +1788,7 @@ mod tests {
     /// Helper to register all schemas needed for `TopicV1` hierarchy
     fn register_topic_schemas(ops: &mut gts::GtsOps) {
         let base_schema = TopicV1::<()>::gts_schema_with_refs();
-        let base_result = ops.add_schema(
+        let base_result = ops.add_type_schema(
             TopicV1::<()>::gts_type_id().clone().into_string(),
             &base_schema,
         );
@@ -1799,7 +1799,7 @@ mod tests {
         );
 
         let order_schema = OrderTopicConfigV1::gts_schema_with_refs();
-        let order_result = ops.add_schema(
+        let order_result = ops.add_type_schema(
             OrderTopicConfigV1::gts_type_id().clone().into_string(),
             &order_schema,
         );
@@ -1899,7 +1899,7 @@ mod tests {
 
         // Register TopicV1WithIdV1 schema
         let schema = TopicV1WithIdV1::<()>::gts_schema_with_refs();
-        let result = ops.add_schema(
+        let result = ops.add_type_schema(
             TopicV1WithIdV1::<()>::gts_type_id().clone().into_string(),
             &schema,
         );
@@ -1911,7 +1911,7 @@ mod tests {
 
         // Register OrderTopicConfigV1 schema (needed for nested type)
         let order_schema = OrderTopicConfigV1::gts_schema_with_refs();
-        let order_result = ops.add_schema(
+        let order_result = ops.add_type_schema(
             OrderTopicConfigV1::gts_type_id().clone().into_string(),
             &order_schema,
         );
@@ -1951,7 +1951,7 @@ mod tests {
 
         // Register schemas
         let schema1 = TopicV1WithGtsIdV1::<()>::gts_schema_with_refs();
-        let result1 = ops.add_schema(
+        let result1 = ops.add_type_schema(
             TopicV1WithGtsIdV1::<()>::gts_type_id()
                 .clone()
                 .into_string(),
@@ -1964,7 +1964,7 @@ mod tests {
         );
 
         let order_schema = OrderTopicConfigV1::gts_schema_with_refs();
-        let order_result = ops.add_schema(
+        let order_result = ops.add_type_schema(
             OrderTopicConfigV1::gts_type_id().clone().into_string(),
             &order_schema,
         );
@@ -2026,7 +2026,7 @@ mod tests {
 
         // Register schemas
         let schema1 = TopicV1WithGtsTypeV1::<()>::gts_schema_with_refs();
-        let result1 = ops.add_schema(
+        let result1 = ops.add_type_schema(
             TopicV1WithGtsTypeV1::<()>::gts_type_id()
                 .clone()
                 .into_string(),
@@ -2039,7 +2039,7 @@ mod tests {
         );
 
         let order_schema = OrderTopicConfigV1::gts_schema_with_refs();
-        let order_result = ops.add_schema(
+        let order_result = ops.add_type_schema(
             OrderTopicConfigV1::gts_type_id().clone().into_string(),
             &order_schema,
         );
@@ -2107,7 +2107,7 @@ mod tests {
 
         // Register schemas
         let base_schema = BaseEventV1::<()>::gts_schema_with_refs();
-        let base_result = ops.add_schema(
+        let base_result = ops.add_type_schema(
             BaseEventV1::<()>::gts_type_id().clone().into_string(),
             &base_schema,
         );
@@ -2118,7 +2118,7 @@ mod tests {
         );
 
         let simple_schema = SimplePayloadV1::gts_schema_with_refs();
-        let simple_result = ops.add_schema(
+        let simple_result = ops.add_type_schema(
             SimplePayloadV1::gts_type_id().clone().into_string(),
             &simple_schema,
         );
@@ -2169,7 +2169,7 @@ mod tests {
 
         // Register all schemas in the inheritance chain
         let base_schema = BaseEventV1::<()>::gts_schema_with_refs();
-        let base_result = ops.add_schema(
+        let base_result = ops.add_type_schema(
             BaseEventV1::<()>::gts_type_id().clone().into_string(),
             &base_schema,
         );
@@ -2180,7 +2180,7 @@ mod tests {
         );
 
         let audit_schema = AuditPayloadV1::<()>::gts_schema_with_refs();
-        let audit_result = ops.add_schema(
+        let audit_result = ops.add_type_schema(
             AuditPayloadV1::<()>::gts_type_id().clone().into_string(),
             &audit_schema,
         );
@@ -2191,7 +2191,7 @@ mod tests {
         );
 
         let order_schema = PlaceOrderDataV1::gts_schema_with_refs();
-        let order_result = ops.add_schema(
+        let order_result = ops.add_type_schema(
             PlaceOrderDataV1::gts_type_id().clone().into_string(),
             &order_schema,
         );

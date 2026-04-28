@@ -65,14 +65,14 @@ impl GtsHttpServer {
             .route("/entities", get(get_entities).post(add_entity))
             .route("/entities/{gts_id}", get(get_entity))
             .route("/entities/bulk", post(add_entities))
-            .route("/schemas", post(add_schema))
+            .route("/type-schemas", post(add_type_schema))
             .route("/validate-id", get(validate_id))
             .route("/extract-id", post(extract_id))
             .route("/parse-id", get(parse_id))
             .route("/match-id-pattern", get(match_id_pattern))
             .route("/uuid", get(id_to_uuid))
             .route("/validate-instance", post(validate_instance))
-            .route("/validate-schema", post(validate_schema))
+            .route("/validate-type-schema", post(validate_type_schema))
             .route("/validate-entity", post(validate_entity))
             .route("/resolve-relationships", get(schema_graph))
             .route("/compatibility", get(compatibility))
@@ -164,10 +164,10 @@ fn default_limit() -> usize {
 }
 
 #[derive(Deserialize)]
-struct SchemaRegister {
+struct TypeSchemaRegister {
     type_id: String,
-    #[serde(rename = "schema")]
-    schema_content: Value,
+    #[serde(rename = "type_schema")]
+    type_schema_content: Value,
 }
 
 #[derive(Deserialize, serde::Serialize)]
@@ -182,7 +182,7 @@ struct ValidateInstanceRequest {
 }
 
 #[derive(Deserialize, serde::Serialize)]
-struct ValidateSchemaRequest {
+struct ValidateTypeSchemaRequest {
     type_id: String,
 }
 
@@ -258,15 +258,15 @@ async fn add_entities(
     Json(result).into_response()
 }
 
-async fn add_schema(
+async fn add_type_schema(
     State(state): State<AppState>,
-    Json(body): Json<SchemaRegister>,
+    Json(body): Json<TypeSchemaRegister>,
 ) -> impl IntoResponse {
     let mut ops = match lock_ops(&state.ops) {
         Ok(guard) => guard,
         Err(response) => return response.into_response(),
     };
-    let result = ops.add_schema(body.type_id, &body.schema_content);
+    let result = ops.add_type_schema(body.type_id, &body.type_schema_content);
     Json(result).into_response()
 }
 
@@ -339,15 +339,15 @@ async fn validate_instance(
     Json(result).into_response()
 }
 
-async fn validate_schema(
+async fn validate_type_schema(
     State(state): State<AppState>,
-    Json(body): Json<ValidateSchemaRequest>,
+    Json(body): Json<ValidateTypeSchemaRequest>,
 ) -> impl IntoResponse {
     let mut ops = match lock_ops(&state.ops) {
         Ok(guard) => guard,
         Err(response) => return response.into_response(),
     };
-    let result = ops.validate_schema(&body.type_id);
+    let result = ops.validate_type_schema(&body.type_id);
     Json(result).into_response()
 }
 

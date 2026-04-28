@@ -150,7 +150,7 @@ pub struct GtsAddEntitiesResult {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GtsAddSchemaResult {
+pub struct GtsAddTypeSchemaResult {
     pub ok: bool,
     #[serde(skip_serializing_if = "String::is_empty")]
     pub id: String,
@@ -424,22 +424,26 @@ impl GtsOps {
         GtsAddEntitiesResult { ok, results }
     }
 
-    pub fn add_schema(&mut self, type_id: String, schema: &Value) -> GtsAddSchemaResult {
-        match self.store.register_schema(&type_id, schema) {
-            Ok(()) => GtsAddSchemaResult {
+    pub fn add_type_schema(
+        &mut self,
+        type_id: String,
+        type_schema: &Value,
+    ) -> GtsAddTypeSchemaResult {
+        match self.store.register_schema(&type_id, type_schema) {
+            Ok(()) => GtsAddTypeSchemaResult {
                 ok: true,
                 id: type_id,
                 error: String::new(),
             },
-            Err(e) => GtsAddSchemaResult {
+            Err(e) => GtsAddTypeSchemaResult {
                 ok: false,
                 id: String::new(),
                 error: format!(
-                    "Unable to register schema: {e}\n{}",
+                    "Unable to register type schema: {e}\n{}",
                     self.get_details(&GtsEntity::new(
                         None,
                         None,
-                        schema,
+                        type_schema,
                         Some(&self.cfg),
                         None,
                         false,
@@ -636,7 +640,7 @@ impl GtsOps {
         }
     }
 
-    pub fn validate_schema(&mut self, gts_id: &str) -> GtsValidationResult {
+    pub fn validate_type_schema(&mut self, gts_id: &str) -> GtsValidationResult {
         // First run basic schema validation (meta-schema, refs, etc.)
         if let Err(e) = self.store.validate_schema(gts_id) {
             return GtsValidationResult {
@@ -646,7 +650,7 @@ impl GtsOps {
             };
         }
 
-        // Then run schema-vs-schema chain validation (OP#12)
+        // Then run type-derivation chain validation (OP#12)
         if let Err(e) = self.store.validate_schema_chain(gts_id) {
             return GtsValidationResult {
                 id: gts_id.to_owned(),
@@ -685,7 +689,7 @@ impl GtsOps {
                 };
             }
 
-            let result = self.validate_schema(gts_id);
+            let result = self.validate_type_schema(gts_id);
             if !result.ok {
                 return GtsEntityValidationResult {
                     id: result.id,
@@ -989,7 +993,7 @@ mod tests {
             },
             "required": ["id"]
         });
-        ops.add_schema("gts.test.base.v1.0~".to_owned(), &base_schema);
+        ops.add_type_schema("gts.test.base.v1.0~".to_owned(), &base_schema);
 
         // Register a derived schema
         let derived_schema = json!({
@@ -1003,7 +1007,7 @@ mod tests {
             },
             "required": ["id"]
         });
-        ops.add_schema("gts.test.derived.v1.1~".to_owned(), &derived_schema);
+        ops.add_type_schema("gts.test.derived.v1.1~".to_owned(), &derived_schema);
 
         // Register an instance
         let instance = json!({
@@ -1219,7 +1223,7 @@ mod tests {
                 }
             }
         });
-        ops.add_schema("gts.test.compat.v1.0~".to_owned(), &old_schema);
+        ops.add_type_schema("gts.test.compat.v1.0~".to_owned(), &old_schema);
 
         // Register new schema with expanded enum
         let new_schema = json!({
@@ -1233,7 +1237,7 @@ mod tests {
                 }
             }
         });
-        ops.add_schema("gts.test.compat.v1.1~".to_owned(), &new_schema);
+        ops.add_type_schema("gts.test.compat.v1.1~".to_owned(), &new_schema);
 
         // Check compatibility - just verify the method executes
         let result = ops.compatibility("gts.test.compat.v1.0~", "gts.test.compat.v1.1~");
@@ -1527,10 +1531,10 @@ mod tests {
     }
 
     #[test]
-    fn test_gts_add_schema_result_serialization() {
-        use crate::ops::GtsAddSchemaResult;
+    fn test_gts_add_type_schema_result_serialization() {
+        use crate::ops::GtsAddTypeSchemaResult;
 
-        let result = GtsAddSchemaResult {
+        let result = GtsAddTypeSchemaResult {
             ok: true,
             id: "gts.vendor.package.namespace.type.v1.0~".to_owned(),
             error: String::new(),
@@ -2502,7 +2506,7 @@ mod tests {
             "type": "object"
         });
 
-        ops.add_schema(
+        ops.add_type_schema(
             "gts.vendor.package.namespace.type.v1.0~".to_owned(),
             &schema,
         );
@@ -2671,7 +2675,7 @@ mod tests {
             }
         });
 
-        ops.add_schema(
+        ops.add_type_schema(
             "gts.vendor.package.namespace.type.v1.0~".to_owned(),
             &schema,
         );
@@ -2744,11 +2748,11 @@ mod tests {
             }
         });
 
-        ops.add_schema(
+        ops.add_type_schema(
             "gts.vendor.package.namespace.type.v1.0~".to_owned(),
             &schema1,
         );
-        ops.add_schema(
+        ops.add_type_schema(
             "gts.vendor.package.namespace.type.v1.1~".to_owned(),
             &schema2,
         );
@@ -3459,7 +3463,7 @@ mod tests {
     }
 
     #[test]
-    fn test_validate_schema_success() {
+    fn test_validate_type_schema_success() {
         let mut ops = GtsOps::new(None, None, 0);
 
         // Add a valid schema
@@ -3475,18 +3479,18 @@ mod tests {
         ops.add_entity(&schema, false);
 
         // Validate the schema
-        let result = ops.validate_schema("gts.test.validate.schema.success.v1~");
+        let result = ops.validate_type_schema("gts.test.validate.schema.success.v1~");
         assert!(result.ok, "Valid schema should pass validation");
         assert!(result.error.is_empty());
         assert_eq!(result.id, "gts.test.validate.schema.success.v1~");
     }
 
     #[test]
-    fn test_validate_schema_not_found() {
+    fn test_validate_type_schema_not_found() {
         let mut ops = GtsOps::new(None, None, 0);
 
         // Validate a schema that doesn't exist
-        let result = ops.validate_schema("gts.test.validate.schema.notfound.v1~");
+        let result = ops.validate_type_schema("gts.test.validate.schema.notfound.v1~");
         assert!(!result.ok, "Non-existent schema should fail validation");
         assert!(!result.error.is_empty(), "Should have error message");
     }
@@ -3504,7 +3508,7 @@ mod tests {
 
         ops.add_entity(&schema, false);
 
-        // validate_entity should route to validate_schema for schema IDs
+        // validate_entity should route to validate_type_schema for type IDs
         let result = ops.validate_entity("gts.test.validate.entity.schema.v1~");
         assert!(
             result.ok,

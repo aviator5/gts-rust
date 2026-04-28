@@ -46,7 +46,7 @@ $PYTEST .gts-spec/tests --gts-base-url http://127.0.0.1:8001
 
 # One file / one class
 $PYTEST .gts-spec/tests/test_refimpl_x_gts_final_abstract.py --gts-base-url http://127.0.0.1:8001
-$PYTEST .gts-spec/tests/test_op12_schema_vs_schema_validation.py::TestCaseOp12_FinalBase_RejectDerived --gts-base-url http://127.0.0.1:8001
+$PYTEST .gts-spec/tests/test_op12_type_derivation_validation.py::TestCaseOp12_FinalBase_RejectDerived --gts-base-url http://127.0.0.1:8001
 ```
 
 `GTS_BASE_URL` env var works too. The server holds state in memory with no reset endpoint — restart between full-suite runs.
