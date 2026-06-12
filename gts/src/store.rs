@@ -1019,6 +1019,65 @@ impl GtsStore {
         Ok(self.resolve(type_id)?.effective_trait_schema)
     }
 
+    /// Validate a caller-supplied instance payload against `type_id`'s schema.
+    ///
+    /// Stateless: no registered instance is required, but the type and its
+    /// `$ref`/chain dependencies must be registered. Rejects abstract types
+    /// (OP#6) and enforces `x-gts-ref`.
+    ///
+    /// # Errors
+    /// `StoreError::ValidationError` on schema-compile failure, JSON Schema
+    /// validation failure, abstract type, or `x-gts-ref` violation; resolution
+    /// errors per [`Self::resolve`].
+    pub fn validate_payload(&mut self, type_id: &str, payload: &Value) -> Result<(), StoreError> {
+        let rt = self.resolve(type_id)?;
+        if rt.is_abstract {
+            return Err(StoreError::ValidationError(format!(
+                "type '{type_id}' is abstract and cannot have direct instances"
+            )));
+        }
+
+        // Strip x-gts-ref before compiling (unknown keyword to jsonschema); keep
+        // a retriever for any residual gts:// refs, mirroring validate_instance.
+        let schema_for_validation = Self::remove_x_gts_ref_fields(&rt.effective_schema);
+        let retriever = GtsRetriever::new(&self.by_id);
+        let validator = jsonschema::options()
+            .with_retriever(retriever)
+            .build(&schema_for_validation)
+            .map_err(|e| {
+                StoreError::ValidationError(format!("Invalid schema for '{type_id}': {e}"))
+            })?;
+
+        let errors: Vec<String> = validator.iter_errors(payload).map(|e| e.to_string()).collect();
+        if !errors.is_empty() {
+            return Err(StoreError::ValidationError(format!(
+                "Validation failed: {}",
+                errors.join(", ")
+            )));
+        }
+
+        let xref = crate::x_gts_ref::XGtsRefValidator::new();
+        let xref_errors = xref.validate_instance(payload, &rt.effective_schema, "");
+        if !xref_errors.is_empty() {
+            let msgs: Vec<String> = xref_errors
+                .iter()
+                .map(|e| {
+                    if e.field_path.is_empty() {
+                        e.reason.clone()
+                    } else {
+                        format!("{}: {}", e.field_path, e.reason)
+                    }
+                })
+                .collect();
+            return Err(StoreError::ValidationError(format!(
+                "x-gts-ref validation failed: {}",
+                msgs.join("; ")
+            )));
+        }
+
+        Ok(())
+    }
+
     /// OP#13 entity-level check: ensures the effective trait schema is "closed".
     ///
     /// For a schema to be a valid standalone entity, every `x-gts-traits-schema`

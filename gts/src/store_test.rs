@@ -4530,3 +4530,51 @@ fn test_effective_projections() {
         "http://json-schema.org/draft-07/schema#"
     );
 }
+
+#[test]
+fn test_validate_payload_ok_and_reject() {
+    let mut store = GtsStore::new(None);
+    store
+        .register_schema(
+            "gts.x.vp.tr.base.v1~",
+            &json!({
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "required": ["id"],
+                "properties": {"id": {"type": "string"}}
+            }),
+        )
+        .unwrap();
+
+    assert!(
+        store
+            .validate_payload("gts.x.vp.tr.base.v1~", &json!({"id": "x"}))
+            .is_ok()
+    );
+    assert!(
+        store
+            .validate_payload("gts.x.vp.tr.base.v1~", &json!({}))
+            .is_err()
+    );
+}
+
+#[test]
+fn test_validate_payload_rejects_abstract_type() {
+    let mut store = GtsStore::new(None);
+    store
+        .register_schema(
+            "gts.x.vp.tr.abs.v1~",
+            &json!({
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "x-gts-abstract": true,
+                "properties": {"id": {"type": "string"}}
+            }),
+        )
+        .unwrap();
+
+    let err = store
+        .validate_payload("gts.x.vp.tr.abs.v1~", &json!({"id": "x"}))
+        .unwrap_err();
+    assert!(format!("{err}").contains("abstract"));
+}
