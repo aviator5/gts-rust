@@ -4429,3 +4429,43 @@ fn test_op13_redeclared_default_in_mid_allowed() {
         "Redeclared default in descendant should be allowed, got: {result:?}"
     );
 }
+
+#[test]
+fn test_collect_resolved_trait_inputs_walks_id_chain() {
+    let mut store = GtsStore::new(None);
+    store
+        .register_schema(
+            "gts.x.cti.tr.base.v1~",
+            &json!({
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "x-gts-traits-schema": { "type": "object", "properties": {
+                    "retention": {"type": "string", "default": "P30D"},
+                    "tier": {"type": "string"}
+                }},
+                "x-gts-traits": {"tier": "standard"}
+            }),
+        )
+        .unwrap();
+    store
+        .register_schema(
+            "gts.x.cti.tr.base.v1~x.cti._.leaf.v1~",
+            &json!({
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "x-gts-traits": {"tier": "premium"}
+            }),
+        )
+        .unwrap();
+
+    let (schemas, merged, dialect, is_abstract) = store
+        .collect_resolved_trait_inputs("gts.x.cti.tr.base.v1~x.cti._.leaf.v1~")
+        .unwrap();
+    assert_eq!(schemas.len(), 1, "one x-gts-traits-schema in the chain");
+    assert_eq!(merged["tier"], "premium", "leaf value wins (RFC 7396)");
+    assert_eq!(
+        dialect.as_deref(),
+        Some("http://json-schema.org/draft-07/schema#")
+    );
+    assert!(!is_abstract);
+}

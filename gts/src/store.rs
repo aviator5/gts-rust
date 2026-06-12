@@ -837,24 +837,53 @@ impl GtsStore {
     /// # Errors
     /// Returns `StoreError::ValidationError` if trait validation fails.
     pub(crate) fn validate_schema_traits(&mut self, gts_id: &str) -> Result<(), StoreError> {
-        let gid = GtsId::new(gts_id)
-            .map_err(|e| StoreError::ValidationError(format!("Invalid GTS ID: {e}")))?;
+        let (resolved_trait_schemas, merged, dialect, is_abstract) =
+            self.collect_resolved_trait_inputs(gts_id)?;
 
+        // Abstract types are templates, not deployable entities: trait
+        // completeness is not enforced (descendants close required traits).
+        if is_abstract {
+            return Ok(());
+        }
+
+        crate::schema_traits::validate_effective_traits(
+            &resolved_trait_schemas,
+            &merged,
+            true,
+            dialect.as_deref(),
+        )
+        .map_err(|errors| {
+            StoreError::ValidationError(format!(
+                "Schema '{gts_id}' trait validation failed: {}",
+                errors.join("; ")
+            ))
+        })
+    }
+
+    /// Collect, along the `$id` chain of `type_id` (root → leaf), the resolved
+    /// `x-gts-traits-schema` subschemas and the RFC 7396-merged `x-gts-traits`
+    /// values, plus the leaf's `$schema` dialect and `x-gts-abstract` flag.
+    ///
+    /// Uses *raw* content for collection because `resolve_schema_refs` flattens
+    /// `allOf` and drops the `x-gts-*` extension keys; `$ref`s inside the
+    /// collected trait schemas are resolved/inlined afterward. `x-gts-traits`
+    /// values along the chain are merged per RFC 7396 JSON Merge Patch
+    /// (descendant last-wins for scalars/arrays, recursive merge for objects,
+    /// `null` deletes the key). Shared by [`Self::validate_schema_traits`] and
+    /// [`Self::resolve`].
+    ///
+    /// # Errors
+    /// `StoreError::ValidationError` if the id is invalid, an ancestor schema is
+    /// missing, or a `$ref` inside a trait schema fails to resolve.
+    pub(crate) fn collect_resolved_trait_inputs(
+        &mut self,
+        type_id: &str,
+    ) -> Result<(Vec<Value>, Value, Option<String>, bool), StoreError> {
+        let gid = GtsId::new(type_id)
+            .map_err(|e| StoreError::ValidationError(format!("Invalid GTS ID: {e}")))?;
         let segments = &gid.segments();
 
-        // Collect raw trait schemas and trait values from every schema in the chain.
-        // We use *raw* content because resolve_schema_refs flattens allOf and only
-        // keeps `properties`/`required`, dropping extension keys like x-gts-*.
-        //
-        // x-gts-traits-schema declarations along the $id chain are composed via
-        // allOf into a single effective trait-schema (handled in
-        // schema_traits::build_effective_trait_schema). x-gts-traits values along
-        // the chain are merged per RFC 7396 JSON Merge Patch (descendant last-wins
-        // for scalars/arrays, recursive merge for objects, `null` deletes the
-        // key). The publisher locks a value via standard JSON Schema `const` in
-        // x-gts-traits-schema; the registry carries no GTS-specific immutability
-        // rule.
-        let mut trait_schemas: Vec<serde_json::Value> = Vec::new();
+        let mut trait_schemas: Vec<Value> = Vec::new();
         let mut merged_traits = serde_json::Map::new();
 
         for i in 0..segments.len() {
@@ -873,68 +902,40 @@ impl GtsStore {
                 ))
             })?;
 
-            // Collect x-gts-traits-schema from the raw content (object | true | false).
             crate::schema_traits::collect_trait_schema_from_value(&content, &mut trait_schemas);
 
-            // Collect x-gts-traits from the raw content, then RFC 7396-merge
-            // them into the accumulated merged_traits.
             let mut level_traits = serde_json::Map::new();
             crate::schema_traits::collect_traits_from_value(&content, &mut level_traits);
-            tracing::debug!(
-                "validate_schema_traits [{schema_id}]: level_traits={:?}",
-                level_traits.keys().collect::<Vec<_>>(),
-            );
             crate::schema_traits::merge_rfc7396_into(&mut merged_traits, &level_traits);
         }
 
-        // Resolve $ref inside each collected trait schema so that external
-        // references (e.g. gts://gts.x.test13.traits.retention.v1~) are inlined.
-        let mut resolved_trait_schemas: Vec<serde_json::Value> =
-            Vec::with_capacity(trait_schemas.len());
+        let mut resolved_trait_schemas: Vec<Value> = Vec::with_capacity(trait_schemas.len());
         for ts in &trait_schemas {
             let resolved = self.resolve_schema_refs_checked(ts).map_err(|e| {
-                StoreError::ValidationError(format!("Schema '{gts_id}' trait schema has {e}"))
+                StoreError::ValidationError(format!("Schema '{type_id}' trait schema has {e}"))
             })?;
             resolved_trait_schemas.push(resolved);
         }
 
-        // Check if the leaf schema is abstract — skip trait validation entirely.
-        // Abstract schemas are not leaf schemas, so trait resolution completeness is not enforced.
-        // While we hold the leaf entity, capture its `$schema` dialect so trait
-        // values validate under the same JSON Schema draft as the host document
-        // (a GTS Type Schema always declares `$schema`).
-        let dialect = if let Some(leaf_entity) = self.get(gts_id) {
-            if leaf_entity
-                .content
-                .get(crate::schema_modifiers::X_GTS_ABSTRACT)
-                == Some(&Value::Bool(true))
-            {
-                return Ok(());
-            }
-            leaf_entity
+        let (dialect, is_abstract) = if let Some(leaf) = self.get(type_id) {
+            let is_abstract = leaf.content.get(crate::schema_modifiers::X_GTS_ABSTRACT)
+                == Some(&Value::Bool(true));
+            let dialect = leaf
                 .content
                 .get("$schema")
                 .and_then(Value::as_str)
-                .map(str::to_owned)
+                .map(str::to_owned);
+            (dialect, is_abstract)
         } else {
-            None
+            (None, false)
         };
 
-        // Delegate to the schema_traits module
-        let merged = serde_json::Value::Object(merged_traits);
-        crate::schema_traits::validate_effective_traits(
-            &resolved_trait_schemas,
-            &merged,
-            true,
-            dialect.as_deref(),
-        )
-        .map_err(|errors| {
-            StoreError::ValidationError(format!(
-                "Schema '{}' trait validation failed: {}",
-                gts_id,
-                errors.join("; ")
-            ))
-        })
+        Ok((
+            resolved_trait_schemas,
+            Value::Object(merged_traits),
+            dialect,
+            is_abstract,
+        ))
     }
 
     /// OP#13 entity-level check: ensures the effective trait schema is "closed".
