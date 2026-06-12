@@ -993,6 +993,32 @@ impl GtsStore {
         })
     }
 
+    /// The type body with all `#/` and `gts://` `$ref`s inlined (self-contained).
+    ///
+    /// # Errors
+    /// See [`Self::resolve`].
+    pub fn effective_schema(&mut self, type_id: &str) -> Result<Value, StoreError> {
+        Ok(self.resolve(type_id)?.effective_schema)
+    }
+
+    /// Chain-merged, default-materialized trait *values* for `type_id`.
+    ///
+    /// # Errors
+    /// See [`Self::resolve`].
+    pub fn effective_traits(&mut self, type_id: &str) -> Result<Value, StoreError> {
+        Ok(self.resolve(type_id)?.effective_traits)
+    }
+
+    /// The effective trait-*schema* for `type_id`. Note: a vanilla JSON Schema
+    /// validator run against this will NOT enforce `x-gts-ref`; use
+    /// [`Self::validate_traits`] for authoritative validation.
+    ///
+    /// # Errors
+    /// See [`Self::resolve`].
+    pub fn effective_trait_schema(&mut self, type_id: &str) -> Result<Value, StoreError> {
+        Ok(self.resolve(type_id)?.effective_trait_schema)
+    }
+
     /// OP#13 entity-level check: ensures the effective trait schema is "closed".
     ///
     /// For a schema to be a valid standalone entity, every `x-gts-traits-schema`

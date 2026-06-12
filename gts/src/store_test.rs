@@ -4500,3 +4500,33 @@ fn test_resolve_returns_artifacts() {
         "http://json-schema.org/draft-07/schema#"
     );
 }
+
+#[test]
+fn test_effective_projections() {
+    let mut store = GtsStore::new(None);
+    store
+        .register_schema(
+            "gts.x.ep.tr.base.v1~",
+            &json!({
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {"id": {"type": "string"}},
+                "x-gts-traits-schema": {"type": "object", "properties": {
+                    "retention": {"type": "string", "default": "P30D"}
+                }}
+            }),
+        )
+        .unwrap();
+
+    let schema = store.effective_schema("gts.x.ep.tr.base.v1~").unwrap();
+    assert!(schema.is_object());
+
+    let traits = store.effective_traits("gts.x.ep.tr.base.v1~").unwrap();
+    assert_eq!(traits["retention"], "P30D");
+
+    let trait_schema = store.effective_trait_schema("gts.x.ep.tr.base.v1~").unwrap();
+    assert_eq!(
+        trait_schema["$schema"],
+        "http://json-schema.org/draft-07/schema#"
+    );
+}
