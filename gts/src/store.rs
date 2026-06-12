@@ -105,6 +105,26 @@ pub struct GtsStoreQueryResult {
     pub results: Vec<Value>,
 }
 
+/// Fully-resolved, self-contained view of a GTS type.
+///
+/// A pure value computed from store contents — the library holds **no cache**
+/// of these. Because schemas are append-only by versioned id (a new version is
+/// a new `type_id`), a `ResolvedType` is safe for a *consumer* to cache forever
+/// keyed by `type_id`.
+#[derive(Debug, Clone)]
+pub struct ResolvedType {
+    /// Type body with all `#/` and `gts://` `$ref`s inlined.
+    pub effective_schema: Value,
+    /// Chain-merged (RFC 7396) and default-materialized trait values.
+    pub effective_traits: Value,
+    /// Dialect-pinned, `allOf`-composed, `$ref`-inlined effective trait-schema.
+    pub effective_trait_schema: Value,
+    /// `true` when the type declares `x-gts-abstract: true`.
+    pub is_abstract: bool,
+    /// The type's JSON Schema dialect (`$schema`), if declared.
+    pub dialect: Option<String>,
+}
+
 pub struct GtsStore {
     by_id: HashMap<String, GtsEntity>,
     reader: Option<Box<dyn GtsReader>>,
@@ -936,6 +956,41 @@ impl GtsStore {
             dialect,
             is_abstract,
         ))
+    }
+
+    /// Compute the full [`ResolvedType`] view for `type_id`.
+    ///
+    /// Performs all expensive work on every call (`$ref` inlining + `$id`-chain
+    /// trait collection / merge / materialization) and returns an owned value.
+    /// The library does not cache; a consumer that calls this repeatedly for
+    /// the same `type_id` should cache the result (safe forever — versioned ids
+    /// are immutable).
+    ///
+    /// # Errors
+    /// `StoreError::SchemaNotFound` if the type is not registered;
+    /// `StoreError::ValidationError` if `$ref` resolution fails.
+    pub fn resolve(&mut self, type_id: &str) -> Result<ResolvedType, StoreError> {
+        let content = self.get_schema_content(type_id)?;
+        let effective_schema = self
+            .resolve_schema_refs_checked(&content)
+            .map_err(|e| StoreError::ValidationError(format!("Schema '{type_id}' has {e}")))?;
+
+        let (resolved_trait_schemas, merged, dialect, is_abstract) =
+            self.collect_resolved_trait_inputs(type_id)?;
+        let (effective_trait_schema, effective_traits) =
+            crate::schema_traits::effective_trait_schema_and_values(
+                &resolved_trait_schemas,
+                &merged,
+                dialect.as_deref(),
+            );
+
+        Ok(ResolvedType {
+            effective_schema,
+            effective_traits,
+            effective_trait_schema,
+            is_abstract,
+            dialect,
+        })
     }
 
     /// OP#13 entity-level check: ensures the effective trait schema is "closed".

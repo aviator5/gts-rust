@@ -4469,3 +4469,34 @@ fn test_collect_resolved_trait_inputs_walks_id_chain() {
     );
     assert!(!is_abstract);
 }
+
+#[test]
+fn test_resolve_returns_artifacts() {
+    let mut store = GtsStore::new(None);
+    store
+        .register_schema(
+            "gts.x.rs.tr.base.v1~",
+            &json!({
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {"id": {"type": "string"}},
+                "x-gts-traits-schema": {"type": "object", "properties": {
+                    "tier": {"type": "string", "default": "standard"}
+                }}
+            }),
+        )
+        .unwrap();
+
+    let rt = store.resolve("gts.x.rs.tr.base.v1~").unwrap();
+    assert_eq!(rt.effective_traits["tier"], "standard");
+    assert!(!rt.is_abstract);
+    assert_eq!(
+        rt.dialect.as_deref(),
+        Some("http://json-schema.org/draft-07/schema#")
+    );
+    assert!(rt.effective_schema.is_object());
+    assert_eq!(
+        rt.effective_trait_schema["$schema"],
+        "http://json-schema.org/draft-07/schema#"
+    );
+}
