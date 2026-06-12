@@ -125,6 +125,20 @@ pub struct ResolvedType {
     pub dialect: Option<String>,
 }
 
+/// Chain-collected trait inputs for a type, before composition into the
+/// effective trait-schema / values. Produced by
+/// [`GtsStore::collect_resolved_trait_inputs`].
+pub(crate) struct ResolvedTraitInputs {
+    /// `$ref`-resolved `x-gts-traits-schema` subschemas, root → leaf.
+    pub resolved_trait_schemas: Vec<Value>,
+    /// RFC 7396-merged `x-gts-traits` values across the chain.
+    pub merged_traits: Value,
+    /// The leaf's `$schema` dialect, if declared.
+    pub dialect: Option<String>,
+    /// `true` when the leaf declares `x-gts-abstract: true`.
+    pub is_abstract: bool,
+}
+
 pub struct GtsStore {
     by_id: HashMap<String, GtsEntity>,
     reader: Option<Box<dyn GtsReader>>,
@@ -857,20 +871,19 @@ impl GtsStore {
     /// # Errors
     /// Returns `StoreError::ValidationError` if trait validation fails.
     pub(crate) fn validate_schema_traits(&mut self, gts_id: &str) -> Result<(), StoreError> {
-        let (resolved_trait_schemas, merged, dialect, is_abstract) =
-            self.collect_resolved_trait_inputs(gts_id)?;
+        let inputs = self.collect_resolved_trait_inputs(gts_id)?;
 
         // Abstract types are templates, not deployable entities: trait
         // completeness is not enforced (descendants close required traits).
-        if is_abstract {
+        if inputs.is_abstract {
             return Ok(());
         }
 
         crate::schema_traits::validate_effective_traits(
-            &resolved_trait_schemas,
-            &merged,
+            &inputs.resolved_trait_schemas,
+            &inputs.merged_traits,
             true,
-            dialect.as_deref(),
+            inputs.dialect.as_deref(),
         )
         .map_err(|errors| {
             StoreError::ValidationError(format!(
@@ -898,7 +911,7 @@ impl GtsStore {
     pub(crate) fn collect_resolved_trait_inputs(
         &mut self,
         type_id: &str,
-    ) -> Result<(Vec<Value>, Value, Option<String>, bool), StoreError> {
+    ) -> Result<ResolvedTraitInputs, StoreError> {
         let gid = GtsId::new(type_id)
             .map_err(|e| StoreError::ValidationError(format!("Invalid GTS ID: {e}")))?;
         let segments = &gid.segments();
@@ -950,12 +963,12 @@ impl GtsStore {
             (None, false)
         };
 
-        Ok((
+        Ok(ResolvedTraitInputs {
             resolved_trait_schemas,
-            Value::Object(merged_traits),
+            merged_traits: Value::Object(merged_traits),
             dialect,
             is_abstract,
-        ))
+        })
     }
 
     /// Compute the full [`ResolvedType`] view for `type_id`.
@@ -975,21 +988,20 @@ impl GtsStore {
             .resolve_schema_refs_checked(&content)
             .map_err(|e| StoreError::ValidationError(format!("Schema '{type_id}' has {e}")))?;
 
-        let (resolved_trait_schemas, merged, dialect, is_abstract) =
-            self.collect_resolved_trait_inputs(type_id)?;
+        let inputs = self.collect_resolved_trait_inputs(type_id)?;
         let (effective_trait_schema, effective_traits) =
             crate::schema_traits::effective_trait_schema_and_values(
-                &resolved_trait_schemas,
-                &merged,
-                dialect.as_deref(),
+                &inputs.resolved_trait_schemas,
+                &inputs.merged_traits,
+                inputs.dialect.as_deref(),
             );
 
         Ok(ResolvedType {
             effective_schema,
             effective_traits,
             effective_trait_schema,
-            is_abstract,
-            dialect,
+            is_abstract: inputs.is_abstract,
+            dialect: inputs.dialect,
         })
     }
 
@@ -1048,7 +1060,10 @@ impl GtsStore {
                 StoreError::ValidationError(format!("Invalid schema for '{type_id}': {e}"))
             })?;
 
-        let errors: Vec<String> = validator.iter_errors(payload).map(|e| e.to_string()).collect();
+        let errors: Vec<String> = validator
+            .iter_errors(payload)
+            .map(|e| e.to_string())
+            .collect();
         if !errors.is_empty() {
             return Err(StoreError::ValidationError(format!(
                 "Validation failed: {}",

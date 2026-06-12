@@ -760,6 +760,63 @@ impl GtsOps {
         GtsSchemaGraphResult { graph }
     }
 
+    /// See [`GtsStore::effective_schema`].
+    ///
+    /// # Errors
+    /// Propagates [`crate::store::StoreError`] from resolution.
+    pub fn effective_schema(
+        &mut self,
+        type_id: &str,
+    ) -> Result<serde_json::Value, crate::store::StoreError> {
+        self.store.effective_schema(type_id)
+    }
+
+    /// See [`GtsStore::effective_traits`].
+    ///
+    /// # Errors
+    /// Propagates [`crate::store::StoreError`] from resolution.
+    pub fn effective_traits(
+        &mut self,
+        type_id: &str,
+    ) -> Result<serde_json::Value, crate::store::StoreError> {
+        self.store.effective_traits(type_id)
+    }
+
+    /// See [`GtsStore::effective_trait_schema`].
+    ///
+    /// # Errors
+    /// Propagates [`crate::store::StoreError`] from resolution.
+    pub fn effective_trait_schema(
+        &mut self,
+        type_id: &str,
+    ) -> Result<serde_json::Value, crate::store::StoreError> {
+        self.store.effective_trait_schema(type_id)
+    }
+
+    /// See [`GtsStore::validate_payload`].
+    ///
+    /// # Errors
+    /// Propagates [`crate::store::StoreError`] from validation.
+    pub fn validate_payload(
+        &mut self,
+        type_id: &str,
+        payload: &serde_json::Value,
+    ) -> Result<(), crate::store::StoreError> {
+        self.store.validate_payload(type_id, payload)
+    }
+
+    /// See [`GtsStore::validate_traits`].
+    ///
+    /// # Errors
+    /// Propagates [`crate::store::StoreError`] from validation.
+    pub fn validate_traits(
+        &mut self,
+        type_id: &str,
+        trait_values: &serde_json::Value,
+    ) -> Result<(), crate::store::StoreError> {
+        self.store.validate_traits(type_id, trait_values)
+    }
+
     pub fn compatibility(&mut self, old_type_id: &str, new_type_id: &str) -> GtsEntityCastResult {
         self.store.is_minor_compatible(old_type_id, new_type_id)
     }

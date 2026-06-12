@@ -1763,7 +1763,10 @@ mod tests {
         // even though the standard jsonschema validator ignores x-gts-ref.
         let values = json!({ "topicRef": "not-a-gts-id" });
         let res = super::validate_materialized_traits(&schema, &values, false);
-        assert!(res.is_err(), "x-gts-ref violation should be reported: {res:?}");
+        assert!(
+            res.is_err(),
+            "x-gts-ref violation should be reported: {res:?}"
+        );
     }
 }
 

@@ -4458,16 +4458,23 @@ fn test_collect_resolved_trait_inputs_walks_id_chain() {
         )
         .unwrap();
 
-    let (schemas, merged, dialect, is_abstract) = store
+    let inputs = store
         .collect_resolved_trait_inputs("gts.x.cti.tr.base.v1~x.cti._.leaf.v1~")
         .unwrap();
-    assert_eq!(schemas.len(), 1, "one x-gts-traits-schema in the chain");
-    assert_eq!(merged["tier"], "premium", "leaf value wins (RFC 7396)");
     assert_eq!(
-        dialect.as_deref(),
+        inputs.resolved_trait_schemas.len(),
+        1,
+        "one x-gts-traits-schema in the chain"
+    );
+    assert_eq!(
+        inputs.merged_traits["tier"], "premium",
+        "leaf value wins (RFC 7396)"
+    );
+    assert_eq!(
+        inputs.dialect.as_deref(),
         Some("http://json-schema.org/draft-07/schema#")
     );
-    assert!(!is_abstract);
+    assert!(!inputs.is_abstract);
 }
 
 #[test]
@@ -4524,7 +4531,9 @@ fn test_effective_projections() {
     let traits = store.effective_traits("gts.x.ep.tr.base.v1~").unwrap();
     assert_eq!(traits["retention"], "P30D");
 
-    let trait_schema = store.effective_trait_schema("gts.x.ep.tr.base.v1~").unwrap();
+    let trait_schema = store
+        .effective_trait_schema("gts.x.ep.tr.base.v1~")
+        .unwrap();
     assert_eq!(
         trait_schema["$schema"],
         "http://json-schema.org/draft-07/schema#"
@@ -4627,7 +4636,11 @@ fn test_validate_traits_prohibited_by_false_schema() {
         )
         .unwrap();
 
-    assert!(store.validate_traits("gts.x.vt.tr.no.v1~", &json!({})).is_ok());
+    assert!(
+        store
+            .validate_traits("gts.x.vt.tr.no.v1~", &json!({}))
+            .is_ok()
+    );
     assert!(
         store
             .validate_traits("gts.x.vt.tr.no.v1~", &json!({"any": 1}))
