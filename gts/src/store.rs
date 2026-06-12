@@ -1078,6 +1078,51 @@ impl GtsStore {
         Ok(())
     }
 
+    /// Validate caller-supplied trait *values* against `type_id`'s effective
+    /// trait-schema.
+    ///
+    /// Materializes schema defaults, runs standard JSON Schema validation plus
+    /// `x-gts-ref` enforcement. Does NOT enforce required-trait completeness
+    /// (that is the registration-time OP#13 check on the type's own traits) —
+    /// supplied values may be partial.
+    ///
+    /// # Errors
+    /// `StoreError::ValidationError` if the values violate the trait-schema or
+    /// the chain prohibits traits (`x-gts-traits-schema: false`); resolution
+    /// errors per [`Self::resolve`].
+    pub fn validate_traits(
+        &mut self,
+        type_id: &str,
+        trait_values: &Value,
+    ) -> Result<(), StoreError> {
+        let rt = self.resolve(type_id)?;
+
+        let has_values = trait_values.as_object().is_some_and(|m| !m.is_empty());
+        if crate::schema_traits::effective_schema_is_false(&rt.effective_trait_schema) {
+            if has_values {
+                return Err(StoreError::ValidationError(format!(
+                    "type '{type_id}': x-gts-traits-schema resolves to `false` — \
+                     trait values are prohibited"
+                )));
+            }
+            return Ok(());
+        }
+
+        let materialized =
+            crate::schema_traits::apply_defaults(&rt.effective_trait_schema, trait_values);
+        crate::schema_traits::validate_materialized_traits(
+            &rt.effective_trait_schema,
+            &materialized,
+            false,
+        )
+        .map_err(|errors| {
+            StoreError::ValidationError(format!(
+                "trait validation failed for '{type_id}': {}",
+                errors.join("; ")
+            ))
+        })
+    }
+
     /// OP#13 entity-level check: ensures the effective trait schema is "closed".
     ///
     /// For a schema to be a valid standalone entity, every `x-gts-traits-schema`

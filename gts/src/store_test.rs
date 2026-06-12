@@ -4578,3 +4578,59 @@ fn test_validate_payload_rejects_abstract_type() {
         .unwrap_err();
     assert!(format!("{err}").contains("abstract"));
 }
+
+#[test]
+fn test_validate_traits_ok_and_type_error() {
+    let mut store = GtsStore::new(None);
+    store
+        .register_schema(
+            "gts.x.vt.tr.base.v1~",
+            &json!({
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "x-gts-traits-schema": {"type": "object", "properties": {
+                    "maxRetries": {"type": "integer", "minimum": 0, "default": 3}
+                }}
+            }),
+        )
+        .unwrap();
+
+    assert!(
+        store
+            .validate_traits("gts.x.vt.tr.base.v1~", &json!({"maxRetries": 5}))
+            .is_ok()
+    );
+    assert!(
+        store
+            .validate_traits("gts.x.vt.tr.base.v1~", &json!({"maxRetries": "x"}))
+            .is_err()
+    );
+    // Empty supplied values pass (default materialized; completeness is off).
+    assert!(
+        store
+            .validate_traits("gts.x.vt.tr.base.v1~", &json!({}))
+            .is_ok()
+    );
+}
+
+#[test]
+fn test_validate_traits_prohibited_by_false_schema() {
+    let mut store = GtsStore::new(None);
+    store
+        .register_schema(
+            "gts.x.vt.tr.no.v1~",
+            &json!({
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "x-gts-traits-schema": false
+            }),
+        )
+        .unwrap();
+
+    assert!(store.validate_traits("gts.x.vt.tr.no.v1~", &json!({})).is_ok());
+    assert!(
+        store
+            .validate_traits("gts.x.vt.tr.no.v1~", &json!({"any": 1}))
+            .is_err()
+    );
+}
