@@ -1,0 +1,10 @@
+warning: hard-coded GTS ID prefix in string literal — use GTS_ID_PREFIX constant or the gts_id! macro instead
+  --> $DIR/trigger_gts_prefix.rs:3:15
+   |
+LL |     let _id = "gts.x.core.events.topic.v1~";
+   |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(gts_id_hardcoded_prefix)]` on by default
+
+warning: 1 warning emitted
+

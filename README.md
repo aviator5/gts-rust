@@ -89,6 +89,10 @@ Command-line tool and HTTP server:
 - **server.rs** - Axum-based HTTP server
 - **main.rs** - Entry point
 
+### `gts-dylint` (Dylint Library Crate)
+
+A [Dylint](https://github.com/trailofbits/dylint) lint that flags hard-coded `"gts."` string literals in production code, encouraging use of the configurable `GTS_ID_PREFIX` constant or the `gts_id!` macro instead. Prefixes can be customized via `GTS_DYLINT_PREFIXES` env var. Requires nightly Rust. See [`gts-dylint/README.md`](gts-dylint/README.md) for details.
+
 ## Installation
 
 ### From Source
@@ -1031,6 +1035,24 @@ cargo fmt
 
 ```bash
 cargo clippy
+```
+
+### Dylint (custom lints)
+
+Run the `gts-dylint` lint to detect hard-coded GTS prefixes (requires nightly):
+
+```bash
+make dylint
+```
+
+See [`gts-dylint/README.md`](gts-dylint/README.md) for setup and usage details.
+
+### Prefix-aware tests
+
+Re-run `gts-id` tests with a non-default `GTS_ID_PREFIX` to catch hard-coded prefixes:
+
+```bash
+make test-gts-id-prefix
 ```
 
 ## License

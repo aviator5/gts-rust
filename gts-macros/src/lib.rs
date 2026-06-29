@@ -2303,6 +2303,12 @@ mod instance;
 pub fn gts_id(input: TokenStream) -> TokenStream {
     let suffix = parse_macro_input!(input as LitStr);
     let full = id_arg::build_prefixed_lit(&suffix);
+    let full_str = full.value();
+    if let Err(e) = gts_id::GtsIdPattern::try_new(&full_str) {
+        return syn::Error::new_spanned(&suffix, format!("gts_id!: invalid GTS ID pattern: {e}"))
+            .to_compile_error()
+            .into();
+    }
     quote!(#full).into()
 }
 

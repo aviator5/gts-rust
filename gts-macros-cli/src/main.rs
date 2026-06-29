@@ -1,3 +1,5 @@
+#![allow(unknown_lints, gts_id_hardcoded_prefix)]
+
 use gts::gts::GtsTypeId;
 use std::fmt::Write;
 use std::path::{Path, PathBuf};
